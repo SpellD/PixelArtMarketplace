@@ -273,13 +273,27 @@ function toggleAuthModal(show) {
 document.getElementById('login-btn').addEventListener('click', () => toggleAuthModal(true));
 document.getElementById('close-auth').addEventListener('click', () => toggleAuthModal(false));
 
-// Google auth
 document.getElementById('google-auth').addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(error => {
-        console.error('Google auth error:', error);
-        alert('Google authentication failed');
-    });
+    provider.addScope('profile');
+    provider.addScope('email');
+    
+    firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+            // Успешная авторизация
+            console.log('Google auth success', result.user);
+        })
+        .catch((error) => {
+            console.error('Google auth error:', error);
+            // Более подробное сообщение об ошибке
+            let errorMessage = 'Google authentication failed';
+            if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = 'You closed the popup without signing in';
+            } else if (error.code === 'auth/account-exists-with-different-credential') {
+                errorMessage = 'Account already exists with different credential';
+            }
+            alert(errorMessage);
+        });
 });
 
 // Email/password auth
